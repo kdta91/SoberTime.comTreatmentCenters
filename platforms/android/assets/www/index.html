@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en" ng-app="CombinedModule">
+<head>
+  <meta charset="utf-8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>SoberTime Treatment Centers</title>
+  <link rel="stylesheet" href="lib/onsen/css/onsenui.css">
+  <link rel="stylesheet" href="styles/onsen-css-components.css">
+  <link rel="stylesheet" href="styles/app.css"/>
+  <script src="lib/onsen/js/angular/angular.js"></script>
+  <script src="lib/onsen/js/onsenui.js"></script>
+  <script src="js/jquery-1.11.1.min.js"></script>
+  <script src="cordova.js"></script>
+  <script src="js/sobertimeapp.js"></script>
+  <script src="js/directives.js"></script>
+  <script src="js/pagination/simplePagination.js"></script>
+  <script>
+    ons.ready(function() {
+    });
+  </script>
+  <script type="text/javascript">
+    function onLoad() {
+        document.addEventListener("deviceready", onDeviceReady, false);
+    }
+
+    function onDeviceReady() {
+        document.addEventListener("offline", function() { navigator.notification.alert("Check your connection and try again.", function() { location.reload(); }, 'Warning', 'Retry'); }, false);
+    }
+  </script>
+<body onload="onLoad()">
+  <ons-sliding-menu main-page="main.html" menu-page="menu.html" type="reveal" side="right" max-slide-distance="280px" var="menu">
+  </ons-sliding-menu>
+
+  <ons-template id="menu.html">
+    <ons-list>
+      <ons-list-item modifier="tappable"><a href="https://twitter.com/sobertimecom" target="_blank">Follow @sobertime_com on Twitter</a></ons-list-item>
+      <ons-list-item modifier="tappable"><a href="https://www.facebook.com/sobertime" target="_blank">Follow us on Facebook</a></ons-list-item>
+      <ons-list-item>Privacy Policy</ons-list-item>
+      <ons-list-item>Terms of Service</ons-list-item>
+      <ons-list-item>Version 1.7</ons-list-item>
+      <ons-list-item>Thank you for downloading. Enjoy!</ons-list-item>
+    </ons-list>
+  </ons-template>
+
+  <ons-template id="main.html">
+    <ons-navigator>
+      <ons-page>
+        <ons-toolbar>
+          <div class="center"><strong>Find Treatment Centers</strong></div>
+        </ons-toolbar>
+
+        <div ng-controller="HomeController">
+          <div style="padding:8px;" class="center">
+            <input type="text" class="search-input" ng-model="center_keyword" placeholder="Treatment Center Name"/><br/>
+            <ons-button ng-click="searchCenter()" modifier="large">Search</ons-button>
+          </div>
+          <div style="padding:8px;" class="center"><strong>Find by Map</strong></div>
+          <div class="container">
+              <div svg-map></div>
+          </div>
+          <div style="padding:8px;" class="center"><strong>Select the state for available treatment centers</strong></div>
+          <ons-scroller style="padding:8px;">
+            <ons-list ng-repeat="state in state_data">
+              <ons-list-item modifier="chevron" ng-click="stateCenters(state.name)">{{ state.name }}</ons-list-item>
+            </ons-list>
+          </ons-scroller>
+        </div>
+      </ons-page>
+    </ons-navigator>
+  </ons-template>
+  
+  <ons-template id="state-centers.html">
+    <ons-page ng-controller="StateCentersController">
+      <ons-toolbar>
+        <div class="left"><ons-back-button>Back</ons-back-button></div>
+        <div class="center"><strong>{{ header }}</strong></div>
+      </ons-toolbar>
+
+      <div style="padding:8px;">
+        <section style="padding:8px;">
+          <input type="text" class="search-input" ng-model="search_centers" placeholder="Treatment Center Name" style="width:100%;"/>
+        </section>
+        <section style="padding:8px;">
+          <span ng-show="show_message">Search results for <strong>{{ kword }}</strong></span>
+        </section>
+        <div ng-show="show" style="text-align:center; margin-top:50%; margin-bottom:50%;">
+          <img src="images/gif-load.gif" alt="Loading...">
+        </div>
+        <ons-list ng-repeat="center in centers | startFrom: pagination.page * pagination.perPage | limitTo: pagination.perPage | filter:search_centers">
+          <ons-list-item modifier="chevron" ng-click="centerDetails(center.a.org_name, center.a.formatted_address, center.a.zip, center.a.phone1, center.a.phone2, center.a.guidestar_participation, center.a.website, center.a.service1, center.a.service2, center.a.service3, center.a.service4, center.a.service5)">{{ center.a.org_name }}</ons-list-item>
+        </ons-list>
+      </div>
+
+      <ons-bottom-toolbar>
+        <div class="center" ng-show="show_pagination">
+          <!-- pagination here -->
+          <ons-icon icon="ion-arrow-left-b" size="45px" style="color:#229E58;" ng-click="pagination.prevPage()" ng-disabled="pagination.page == 0" ng-click="pagination.prevPage()"></ons-icon>
+          <span>Previous</span>
+          <span>{{ pagination.page + 1 }}/{{ pagination.numPages }}</span>
+          <span>Next</span>
+          <ons-icon icon="ion-arrow-right-b" size="45px" style="color:#229E58;" ng-click="pagination.nextPage()" ng-disabled="pagination.page + 1 >= pagination.numPages" ng-click="pagination.nextPage()"></ons-icon>
+        </div>
+      </ons-bottom-toolbar>
+    </ons-page>
+  </ons-template>
+
+  <ons-template id="center-details.html">
+    <ons-page ng-controller="CenterDetailsController">
+      <ons-toolbar>
+        <div class="left"><ons-back-button>Back</ons-back-button></div>
+        <div class="center">Center Info</div>
+      </ons-toolbar>
+
+      <div style="padding:8px;">
+        <div style="text-align: center; margin-bottom: 10px;"><h5>{{ center_name }}</h5></div>
+        <ons-list>
+          <ons-list-header><strong>Address</strong></ons-list-header>
+          <ons-list-item>{{ center_address }}</ons-list-item>
+          <ons-list-header><strong>Postal Code</strong></ons-list-header>
+          <ons-list-item>{{ center_zip }}</ons-list-item>
+          <ons-list-header><strong>Phone</strong></ons-list-header>
+          <ons-list-item>{{ center_phone }}</ons-list-item>
+          <ons-list-header><strong>Guidestar Participation</strong></ons-list-header>
+          <ons-list-item>{{ center_participation }}</ons-list-item>
+          <ons-list-header><strong>Website</strong></ons-list-header>
+          <ons-list-item>{{ center_website }}</ons-list-item>
+          <ons-list-header><strong>Services</strong></ons-list-header>
+          <ons-list-item>{{ center_service1 }}</ons-list-item>
+          <ons-list-item>{{ center_service2 }}</ons-list-item>
+          <ons-list-item>{{ center_service3 }}</ons-list-item>
+          <ons-list-item>{{ center_service4 }}</ons-list-item>
+          <ons-list-item>{{ center_service5 }}</ons-list-item>
+          <ons-list-header><strong>Map</strong></ons-list-header>
+          <ons-list-item><iframe ng-src="{{trustSrc(map_url)}}" frameborder="0" width="100%" height="345px"></iframe></ons-list-item>
+        </ons-list>
+      </div>
+    </ons-page>
+  </ons-template>
+</body>
+</html>
